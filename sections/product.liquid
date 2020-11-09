@@ -152,14 +152,25 @@
         </div>
       {%- endif -%}
 
-      {% render 'product-form',
-        section_id: section.id,
-        product: product,
-        current_variant: current_variant,
-        enable_dynamic_checkout: section.settings.enable_dynamic_checkout,
-        show_quantity_selector: section.settings.show_quantity_selector,
-        show_success_message: true
-      %}
+      {%if product.type=="bundle" %}
+        {% render 'bundle-form',
+          section_id: section.id,
+          product: product,
+          current_variant: current_variant,
+          enable_dynamic_checkout: section.settings.enable_dynamic_checkout,
+          show_quantity_selector: section.settings.show_quantity_selector,
+          show_success_message: true
+        %}
+      {% else %}
+        {% render 'product-form',
+          section_id: section.id,
+          product: product,
+          current_variant: current_variant,
+          enable_dynamic_checkout: section.settings.enable_dynamic_checkout,
+          show_quantity_selector: section.settings.show_quantity_selector,
+          show_success_message: true
+        %}
+      {% endif %}
 
       {%- if product.description != blank -%}
         <div class="product__description rte">

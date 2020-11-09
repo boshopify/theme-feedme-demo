@@ -1,0 +1,108 @@
+{% comment %}
+    Renders a bundle form
+
+    Accepts:
+    - section_id: {String} Identifier of the section (required)
+    - product: {Object} Product Liquid object (required)
+    - current_variant: {String} Current (required)
+    - enable_dynamic_checkout: {Boolean} Show the dynamic checkout button (optional)
+    - show_quantity_selector: {Boolean} Show the quantity selector (optional)
+    - show_success_message: {Boolean} Shows the success message after submitting the form (optional)
+    - show_instant_quantity: {Boolean} Show instant quantity buttons after submitting the form (optional)
+
+    Usage:
+    {% render 'bundle-form',
+      section_id: section.id,
+      product: product,
+      current_variant: product.selected_or_first_available_variant,
+      enable_dynamic_checkout: section.settings.enable_dynamic_checkout,
+      show_quantity_selector: section.settings.show_quantity_selector,
+      show_success_message: true
+    %}
+{% endcomment %}
+
+{% capture form_class %}
+  product-form
+  {% unless enable_dynamic_checkout %} product-form--payment-button-disabled{% endunless %}
+  {% unless product.has_only_default_variant %} product-form--multi-variants{% endunless %}
+  form
+{% endcapture %}
+{% capture variant_name -%}
+  {{- product.title }}{%- unless product.has_only_default_variant -%}{{ current_variant.title | prepend: ' - ' }}{%- endunless -%}
+{% endcapture %}
+
+{%- form 'product', product, 
+    id: "bundle-form", 
+    class: form_class, 
+    novalidate: 'novalidate',
+    data_bundle_id: product.selected_or_first_available_variant.id -%}
+  <div class="form__error-message-wrapper hidden"
+    data-error-message-wrapper
+    role="alert"
+  >
+    <span class="visually-hidden">{{ 'general.accessibility.error' | t }} </span>
+    {% render 'icon-error' %}
+    <span class="form__error-message" data-error-message>{{ 'products.product.quantity_minimum_message' | t }}</span>
+  </div>
+
+  {% comment %} Loop through the from-collections metafields in the bundle product, and find the matching collections to present {% endcomment %}
+  <div class="bundle-build-container">
+    {% for fromCollection in product.metafields.from-collections %}
+      {% assign collectionId = fromCollection | last %}
+      {% for collection in collections %}
+        {% if collection.id == collectionId %}
+          {% comment %} Present a drop-down list for selecting products from a collection {% endcomment %}
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <label class="input-group-text" for={{ collection.handle }}>{{ collection.title }}</label>
+            </div>
+            <select class="custom-select" id={{ collection.handle }}>
+              <option value="" selected>Please select</option>
+              {% for product in collection.products %}
+                <option value={{ product.selected_or_first_available_variant.id }}>{{ product.title }} - {{ product.price | money_with_currency }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+  </div>
+
+  <div id="bundle-price-container">
+  </div>
+
+  <div class="product-form__buttons">
+    <button
+      type="submit"
+      name="add"
+      class="product-form__add-to-cart"
+      data-add-to-cart
+      aria-disabled="true"
+      aria-label="{% unless current_variant.available %}{{ 'products.product.sold_out' | t }}{% else %}{{ 'products.product.add_to_cart' | t }}{% endunless %}">
+        <span data-add-to-cart-text>
+          {%- unless current_variant.available -%}
+            {{ 'products.product.sold_out' | t }}
+          {%- else -%}
+            {{ 'products.product.add_to_cart' | t }}
+          {%- endunless -%}
+        </span>
+    </button>
+
+    {%- if show_success_message -%}
+      <span class="product__success-message hidden" data-product-success-message></span>
+    {%- endif -%}
+
+    {%- if enable_dynamic_checkout -%}
+      {{ form | payment_button }}
+    {%- endif -%}
+
+  </div>
+
+  {%- comment -%}
+    Live region for announcing updated price and availability to screen readers
+  {%- endcomment -%}
+  <p class="visually-hidden" data-product-status
+    aria-live="polite"
+    role="status"
+  ></p>
+{%- endform -%}

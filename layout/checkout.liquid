@@ -58,7 +58,26 @@
     <script>
       const POST_CODE_LOWER_LIMIT = 2000;
       const POST_CODE_UPPER_LIMIT = 2010;
+
       document.addEventListener(`page:load`, () => {
+
+        // customize order summary table to hide bundle items
+        orderSummaryTable = document.querySelector(".product-table");
+        lineItemRows = orderSummaryTable.tBodies[0].rows;
+        bundleItemProperty = "bundle-item: yes";
+        bundleProperty = "bundle: yes";
+        for(row of lineItemRows ){
+          if(row.innerText.includes(bundleItemProperty)){
+            row.setAttribute("hidden", "true");
+          } else if(row.innerText.includes(bundleProperty)){
+            // hide the bundle items variant IDs from being displayed
+            let spans = row.getElementsByClassName("product__description__property order-summary__small-text")
+            for(span of spans){
+              span.setAttribute("hidden", "true");
+            }
+          }
+        }
+        
         // Validate customer's postal code when it is at shipping_method stage
         if(Shopify.Checkout.step =="shipping_method"){
         	const postCode = '{{ checkout.shipping_address.zip }}'

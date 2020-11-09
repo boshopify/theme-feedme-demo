@@ -1,0 +1,12 @@
+.bundle-build-container {
+    margin-top: 4rem;
+}
+
+/* adjust font size to be aligned with the theme body */
+.bundle-build-container * {
+    font-size: 1.6rem;
+}
+
+#bundle-price-container {
+    margin-top: 4rem;
+}
